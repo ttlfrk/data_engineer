@@ -30,8 +30,6 @@ def upgrade() -> None:
             is_auto_course_enroll       BOOLEAN,
             is_demo_enroll              BOOLEAN
         );
-    ''')
-    op.execute('''
         COMMENT ON TABLE course IS 'Профессия/курс, который изучают на потоке';
     ''')
 
@@ -49,8 +47,6 @@ def upgrade() -> None:
             name                    VARCHAR(255),
             homework_deadline_days       INTEGER
         );
-    ''')
-    op.execute('''
         COMMENT ON TABLE stream IS 'Поток - группа студентов';
     ''')
 
@@ -65,8 +61,6 @@ def upgrade() -> None:
             order_in_stream          INTEGER,
             deleted_at             TIMESTAMP
         );
-    ''')
-    op.execute('''
         COMMENT ON TABLE stream_module IS 'Модули, которые входят в состав курса/профессии';
     ''')  # noqa: E501
 
@@ -85,16 +79,16 @@ def upgrade() -> None:
             online_lesson_join_url        VARCHAR(255),
             online_lesson_recording_url   VARCHAR(255)
         );
-    ''')  # noqa: E501
-    op.execute('''
         COMMENT ON TABLE stream_module_lesson IS 'Уроки, которые входят в модули';
     ''')  # noqa: E501
 
 
 def downgrade() -> None:
     op.execute('''
-        DROP TABLE IF EXISTS stream_module_lesson;
-        DROP TABLE IF EXISTS stream_module;
-        DROP TABLE IF EXISTS stream;
-        DROP TABLE IF EXISTS course;
+        DROP TABLE IF EXISTS
+            stream_module_lesson,
+            stream_module,
+            stream,
+            course
+        CASCADE
     ''')
