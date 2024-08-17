@@ -1,0 +1,4 @@
+# By default, ignore everything
+*
+# source files
+!requirements.alembic.txt

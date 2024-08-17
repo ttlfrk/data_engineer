@@ -1,0 +1,183 @@
+---
+x-airflow-common:
+  &airflow-common
+  image: apache/airflow:2.10.0
+  restart: always
+  env_file:
+    - ./.envs/airflow.env
+  volumes:
+    - ./logs/airflow:/opt/airflow/logs
+    - ./apps/airflow/dags:/opt/airflow/dags
+    - ./apps/airflow/config:/opt/airflow/config
+    - ./apps/airflow/plugins:/opt/airflow/plugins
+  user: "${AIRFLOW_UID:-50000}:0"
+  depends_on:
+    redis:
+      condition: service_healthy
+    db-target:
+      condition: service_healthy
+    db-source:
+      condition: service_healthy
+  networks:
+    - backend
+
+x-postgresql-common:
+  &postgresql-common
+  image: postgres:15.8
+  restart: always
+  networks:
+    - backend
+
+x-alembic-init-common:
+  &alembic-init-common
+  image: alembic
+  build:
+    context: .
+    dockerfile: ./dockerfile.alembic
+  command: alembic upgrade head
+  networks:
+    - backend
+
+services:
+
+  # ---------------------
+  # Базы
+  # ---------------------
+
+  db-source:
+    <<: *postgresql-common
+    container_name: db-source
+    command: -p 7777
+    volumes:
+      - ./data/db_source:/var/lib/postgresql/data
+    ports:
+      - 7777:7777
+    env_file:
+      - ./.envs/db_source.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -p 7777"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    
+
+  db-target:
+    <<: *postgresql-common
+    container_name: db-target
+    command: -p 8888
+    volumes:
+      - ./data/db_target:/var/lib/postgresql/data
+    ports:
+      - 8888:8888
+    env_file:
+      - ./.envs/db_target.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -p 8888"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ---------------------
+  # AirFlow
+  # ---------------------
+
+  # Над AirFlow не думал, просто посмотрел в доку
+  # https://airflow.apache.org/docs/apache-airflow/stable/howto/docker-compose/index.html
+
+  redis:
+    image: redis:7.2-bookworm
+    container_name: redis
+    expose:
+      - 6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 30s
+      retries: 50
+      start_period: 30s
+    restart: always
+    networks:
+      - backend
+
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: airflow-webserver
+    command: webserver
+    ports:
+      - 8080:8080
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: airflow-scheduler
+    command: scheduler
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  airflow-worker:
+    <<: *airflow-common
+    container_name: airflow-worker
+    command: celery worker
+    healthcheck:
+      # yamllint disable rule:line-length
+      test:
+        - "CMD-SHELL"
+        - 'celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}" || celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    environment:
+      # Required to handle warm shutdown of the celery workers properly
+      # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
+      DUMB_INIT_SETSID: "0"
+    restart: always
+
+  airflow-db:
+    <<: *postgresql-common
+    container_name: airflow-db
+    command: -p 9999
+    volumes:
+      - ./data/db_airflow:/var/lib/postgresql/data
+    env_file:
+      - ./.envs/db_airflow.env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -p 9999"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  
+  # ---------------------
+  # Вспомогательные
+  # ---------------------
+
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: nginx
+  #   volumes:
+  #     - ./logs/nginx:/var/logs:rw
+  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+  #     - ./nginx/index.html:/var/www/html/index.html:ro
+  #   depends_on:
+  #     - db-source
+  #     - db-taget
+  #   ports:
+  #     - 80:80
+  #   networks:
+  #     - backend
+
+networks:
+  backend:
+    driver: bridge
