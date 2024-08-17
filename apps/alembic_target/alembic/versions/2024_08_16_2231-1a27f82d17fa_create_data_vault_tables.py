@@ -34,6 +34,11 @@ def upgrade() -> None:
             name     VARCHAR(50) NOT NULL
         );
         COMMENT ON TABLE data_vault.sources IS 'Справочник источников';
+        INSERT INTO data_vault.sources (
+            name
+        ) VALUES (
+            'source'
+        );
     ''')
 
     # Create hub tables

@@ -18,11 +18,11 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute('CREATE SCHEMA raw')
+    op.execute('CREATE SCHEMA source')
 
     # Create table course
     op.execute('''
-        CREATE TABLE raw.course (
+        CREATE TABLE source.course (
             id                          INTEGER PRIMARY KEY,
             title                  VARCHAR(255),
             created_at                TIMESTAMP,
@@ -32,14 +32,14 @@ def upgrade() -> None:
             is_auto_course_enroll       BOOLEAN,
             is_demo_enroll              BOOLEAN
         );
-        COMMENT ON TABLE raw.course IS 'Профессия/курс, который изучают на потоке';
+        COMMENT ON TABLE source.course IS 'Профессия/курс, который изучают на потоке';
     ''')  # noqa: E501
 
     # Create table stream
     op.execute('''
-        CREATE TABLE raw.stream (
+        CREATE TABLE source.stream (
             id                           INTEGER PRIMARY KEY,
-            course_id                    INTEGER REFERENCES raw.course(id),
+            course_id                    INTEGER REFERENCES source.course(id),
             start_at                   TIMESTAMP,
             end_at                     TIMESTAMP,
             created_at                 TIMESTAMP,
@@ -49,26 +49,26 @@ def upgrade() -> None:
             name                    VARCHAR(255),
             homework_deadline_days       INTEGER
         );
-        COMMENT ON TABLE raw.stream IS 'Поток - группа студентов';
+        COMMENT ON TABLE source.stream IS 'Поток - группа студентов';
     ''')
 
     # Create table stream_module
     op.execute('''
-        CREATE TABLE raw.stream_module (
+        CREATE TABLE source.stream_module (
             id                       INTEGER PRIMARY KEY,
-            stream_id                INTEGER REFERENCES raw.stream(id),
+            stream_id                INTEGER REFERENCES source.stream(id),
             title               VARCHAR(255),
             created_at             TIMESTAMP,
             updated_at             TIMESTAMP,
             order_in_stream          INTEGER,
             deleted_at             TIMESTAMP
         );
-        COMMENT ON TABLE raw.stream_module IS 'Модули, которые входят в состав курса/профессии';
+        COMMENT ON TABLE source.stream_module IS 'Модули, которые входят в состав курса/профессии';
     ''')  # noqa: E501
 
     # Create table stream_module_lesson
     op.execute('''
-        CREATE TABLE raw.stream_module_lesson (
+        CREATE TABLE source.stream_module_lesson (
             id                                 INTEGER PRIMARY KEY,
             title                         VARCHAR(255),
             description                           TEXT,
@@ -76,22 +76,22 @@ def upgrade() -> None:
             end_at                           TIMESTAMP,
             homework_url                  VARCHAR(500),
             teacher_id                         INTEGER,
-            stream_module_id                   INTEGER REFERENCES raw.stream_module(id),
+            stream_module_id                   INTEGER REFERENCES source.stream_module(id),
             deleted_at                    TIMESTAMP(0),
             online_lesson_join_url        VARCHAR(255),
             online_lesson_recording_url   VARCHAR(255)
         );
-        COMMENT ON TABLE raw.stream_module_lesson IS 'Уроки, которые входят в модули';
+        COMMENT ON TABLE source.stream_module_lesson IS 'Уроки, которые входят в модули';
     ''')  # noqa: E501
 
 
 def downgrade() -> None:
     op.execute('''
         DROP TABLE IF EXISTS
-            raw.stream_module_lesson,
-            raw.stream_module,
-            raw.stream,
-            raw.course
+            source.stream_module_lesson,
+            source.stream_module,
+            source.stream,
+            source.course
         CASCADE;
-        DROP SCHEMA raw;
+        DROP SCHEMA source;
     ''')

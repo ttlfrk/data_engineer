@@ -18,6 +18,6 @@ make up
 ```
 
 [Web AirFlow](http://localhost:8080/)
-Логин: airflow
-Пароль: airflow
+
+Логин / пароль: `airflow` / `airflow`
 
