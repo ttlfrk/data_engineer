@@ -212,4 +212,4 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    pASs
+    pass
