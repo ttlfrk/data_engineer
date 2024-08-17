@@ -130,7 +130,6 @@ services:
     container_name: airflow-worker
     command: celery worker
     healthcheck:
-      # yamllint disable rule:line-length
       test:
         - "CMD-SHELL"
         - 'celery --app airflow.providers.celery.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}" || celery --app airflow.executors.celery_executor.app inspect ping -d "celery@$${HOSTNAME}"'
@@ -139,8 +138,6 @@ services:
       retries: 5
       start_period: 30s
     environment:
-      # Required to handle warm shutdown of the celery workers properly
-      # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
       DUMB_INIT_SETSID: "0"
     restart: always
 
@@ -158,25 +155,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
-  
-  # ---------------------
-  # Вспомогательные
-  # ---------------------
-
-  # nginx:
-  #   image: nginx:alpine
-  #   container_name: nginx
-  #   volumes:
-  #     - ./logs/nginx:/var/logs:rw
-  #     - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-  #     - ./nginx/index.html:/var/www/html/index.html:ro
-  #   depends_on:
-  #     - db-source
-  #     - db-taget
-  #   ports:
-  #     - 80:80
-  #   networks:
-  #     - backend
 
 networks:
   backend:
