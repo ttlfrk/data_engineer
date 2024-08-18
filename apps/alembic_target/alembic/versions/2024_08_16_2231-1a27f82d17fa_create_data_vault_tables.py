@@ -114,52 +114,57 @@ def upgrade() -> None:
     # Create sattelits
     op.execute('''
         CREATE TABLE data_vault.sat_course (
+            hash_key                                 UUID NOT NULL,
             course_hash_key                          UUID NOT NULL REFERENCES data_vault.hub_course(hash_key),
             loaded_at                           TIMESTAMP NOT NULL DEFAULT now(),
             source_id                             INTEGER NOT NULL REFERENCES data_vault.sources(id),
-            title                            VARCHAR(255),
-            created_at                          TIMESTAMP,
-            updated_at                          TIMESTAMP,
-            deleted_at                          TIMESTAMP,
-            icon_url                         VARCHAR(255),
-            is_auto_course_enroll                 BOOLEAN,
-            is_demo_enroll                        BOOLEAN
+            s_title                            VARCHAR(255),
+            s_icon_url                         VARCHAR(255),
+            s_is_auto_course_enroll                 BOOLEAN,
+            s_is_demo_enroll                        BOOLEAN,
+            start_active_date                     TIMESTAMP NOT NULL,
+            end_active_date                       TIMESTAMP NOT NULL,
+            is_active                               BOOLEAN NOT NULL,
+            PRIMARY KEY(hash_key, course_hash_key)
         );
         COMMENT ON TABLE data_vault.sat_course IS 'Саттелит для курса';
     ''')  # noqa: E501
     op.execute('''
         CREATE TABLE data_vault.sat_stream (
+            hash_key                                 UUID NOT NULL,
             stream_hash_key                          UUID NOT NULL REFERENCES data_vault.hub_stream(hash_key),
             loaded_at                           TIMESTAMP NOT NULL DEFAULT now(),
             source_id                             INTEGER NOT NULL REFERENCES data_vault.sources(id),
-            s_course_id                           INTEGER,
             s_start_at                          TIMESTAMP,
             s_end_at                            TIMESTAMP,
-            s_created_at                        TIMESTAMP,
-            s_updated_at                        TIMESTAMP,
-            s_deleted_at                        TIMESTAMP,
             s_is_open                             BOOLEAN,
             s_name                           VARCHAR(255),
-            s_homework_deadline_days              INTEGER
+            s_homework_deadline_days              INTEGER,
+            start_active_date                   TIMESTAMP NOT NULL,
+            end_active_date                     TIMESTAMP NOT NULL,
+            is_active                             BOOLEAN NOT NULL,
+            PRIMARY KEY(hash_key, stream_hash_key)
         );
         COMMENT ON TABLE data_vault.sat_stream IS 'Саттелит для потока';
     ''')  # noqa: E501
     op.execute('''
         CREATE TABLE data_vault.sat_stream_module (
+            hash_key                                 UUID NOT NULL,
             stream_module_hash_key                   UUID NOT NULL REFERENCES data_vault.hub_stream_module(hash_key),
             loaded_at                           TIMESTAMP NOT NULL DEFAULT now(),
             source_id                             INTEGER NOT NULL REFERENCES data_vault.sources(id),
-            s_stream_id                           INTEGER,
             s_title                          VARCHAR(255),
-            s_created_at                        TIMESTAMP,
-            s_updated_at                        TIMESTAMP,
             s_order_in_stream                     INTEGER,
-            s_deleted_at                        TIMESTAMP
+            start_active_date                   TIMESTAMP NOT NULL,
+            end_active_date                     TIMESTAMP NOT NULL,
+            is_active                             BOOLEAN NOT NULL,
+            PRIMARY KEY(hash_key, stream_module_hash_key)
         );
         COMMENT ON TABLE data_vault.sat_stream_module IS 'Саттелит для модуля';
     ''')  # noqa: E501
     op.execute('''
         CREATE TABLE data_vault.sat_stream_module_lesson (
+            hash_key                                 UUID NOT NULL,
             stream_module_lesson_hash_key            UUID NOT NULL REFERENCES data_vault.hub_stream_module_lesson(hash_key),
             loaded_at                           TIMESTAMP NOT NULL DEFAULT now(),
             source_id                             INTEGER NOT NULL REFERENCES data_vault.sources(id),
@@ -169,10 +174,12 @@ def upgrade() -> None:
             s_end_at                            TIMESTAMP,
             s_homework_url                   VARCHAR(500),
             s_teacher_id                          INTEGER,
-            s_stream_module_id                    INTEGER,
-            s_deleted_at                        TIMESTAMP,
             s_online_lesson_join_url         VARCHAR(255),
-            s_online_lesson_recording_url    VARCHAR(255)
+            s_online_lesson_recording_url    VARCHAR(255),
+            start_active_date                   TIMESTAMP NOT NULL,
+            end_active_date                     TIMESTAMP NOT NULL,
+            is_active                             BOOLEAN NOT NULL,
+            PRIMARY KEY(hash_key, stream_module_lesson_hash_key)
         );
         COMMENT ON TABLE data_vault.sat_stream_module_lesson IS 'Саттелит для урока';
     ''')  # noqa: E501
