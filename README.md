@@ -1,9 +1,11 @@
-Пример ETL
+### ETL по методологии Data Vault с соблюдением SCD2
+Для ETL используется AirFlow, БД - PostgreSQL 15.
 
+
+#### Запуск
 Перый запуск:
 ```
 make first_run
-make up
 ```
 После выполнения команды, дождаться сообщений об окончании миграций, и завершить вручную `Ctrl + C`:
 ```
@@ -12,7 +14,7 @@ alembic-init-target exited with code 0
 airflow-init exited with code 0   <--- вот здесь можно завершить
 ```
 
-После первого запуска, поднять можно так:
+После, запускать следующей командой:
 ```
 make up
 ```
@@ -20,6 +22,18 @@ make up
 [Web AirFlow](http://localhost:8080/)
 
 Логин / пароль: `airflow` / `airflow`
+
+#### Данные
+
+Исходные данные:
+* [Исходные данные .ods (все вместе)](https://github.com/ttlfrk/data_engineer/blob/main/data/data.ods)
+* [course.csv](https://github.com/ttlfrk/data_engineer/blob/main/data/fixtures/course.csv)
+* [stream.csv](https://github.com/ttlfrk/data_engineer/blob/main/data/fixtures/stream.csv)
+* [stream_module.csv](https://github.com/ttlfrk/data_engineer/blob/main/data/fixtures/stream_module.csv)
+* [stream_module_lesson.csv](https://github.com/ttlfrk/data_engineer/blob/main/data/fixtures/stream_module_lesson.csv)
+
+Схема данных:
+* [ER диаграмма](https://github.com/ttlfrk/data_engineer/blob/main/ER.drawio)
 
 Запрос для витрины (после запуска дага):
 ```sql
